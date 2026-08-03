@@ -12,19 +12,29 @@ tags:
   - diffusion-transformer
 ---
 
+<div align="center">
+
 # GeoCore-9B
+
+### Towards Geo-Aware Generative Foundation Models in Earth Observation
+
+[Jeonghyeok Do](https://jeonghyeokdo.github.io/) &nbsp;·&nbsp;
+[Munchurl Kim](https://scholar.google.com/citations?user=bGXte_4AAAAJ&hl=en)
+
+Korea Advanced Institute of Science and Technology (KAIST)
+
+[![Project Page](https://img.shields.io/badge/Project%20Page-GeoCore--9B-1a6d5a?style=for-the-badge)](https://kaist-viclab.github.io/GeoCore-9B_site/)
+[![Code](https://img.shields.io/badge/GitHub-Code-181717?style=for-the-badge&logo=github)](https://github.com/KAIST-VICLab/GeoCore-9B)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge)](https://www.apache.org/licenses/LICENSE-2.0)
+
+<img src="teaser.jpg" alt="Text-conditioned generation compared with prior methods" width="100%">
+
+</div>
 
 A 9-billion-parameter generative foundation model for Earth Observation, trained from scratch
 exclusively on EO data. GeoCore-9B is a Flow Matching Diffusion Transformer that conditions
 generation on text **and** continuous geospatial metadata — ground sample distance (GSD), latitude
 and longitude.
-
-Paper: *GeoCore-9B: Towards Geo-Aware Generative Foundation Models in Earth Observation* —
-[Jeonghyeok Do](https://jeonghyeokdo.github.io/),
-[Munchurl Kim](https://scholar.google.com/citations?user=bGXte_4AAAAJ&hl=en)
-
-Code: [KAIST-VICLab/GeoCore-9B](https://github.com/KAIST-VICLab/GeoCore-9B) ·
-Project page: [kaist-viclab.github.io/GeoCore-9B_site](https://kaist-viclab.github.io/GeoCore-9B_site/)
 
 ## Model details
 

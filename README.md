@@ -1,13 +1,26 @@
+<div align="center">
+
 # GeoCore-9B: Towards Geo-Aware Generative Foundation Models in Earth Observation
+
+[Jeonghyeok Do](https://jeonghyeokdo.github.io/) &nbsp;·&nbsp;
+[Munchurl Kim](https://scholar.google.com/citations?user=bGXte_4AAAAJ&hl=en)
+
+Korea Advanced Institute of Science and Technology (KAIST)
+
+[![Project Page](https://img.shields.io/badge/Project%20Page-GeoCore--9B-1a6d5a?style=for-the-badge)](https://kaist-viclab.github.io/GeoCore-9B_site/)
+[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Weights-GeoCore--9B-FFD21E?style=for-the-badge)](https://huggingface.co/JeonghyeokDo/GeoCore-9B)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge)](LICENSE)
+
+<img src="https://img.shields.io/badge/Parameters-9.24B-555?style=flat-square" alt="9.24B parameters">
+<img src="https://img.shields.io/badge/Backbone-Flow%20Matching%20DiT-555?style=flat-square" alt="Flow Matching DiT">
+<img src="https://img.shields.io/badge/Pretraining-Git--10M-555?style=flat-square" alt="Git-10M">
+
+<img src="assets/teaser.jpg" alt="Text-conditioned generation compared with prior methods" width="100%">
+
+</div>
 
 Official implementation of **GeoCore-9B**, a 9-billion-parameter generative foundation model for
 Earth Observation (EO), trained from scratch exclusively on EO data.
-
-[Project page](https://kaist-viclab.github.io/GeoCore-9B_site/) ·
-[Model weights](https://huggingface.co/JeonghyeokDo/GeoCore-9B)
-
-[Jeonghyeok Do](https://jeonghyeokdo.github.io/) ·
-[Munchurl Kim](https://scholar.google.com/citations?user=bGXte_4AAAAJ&hl=en)
 
 ---
 
@@ -27,6 +40,10 @@ satellite imagery.
 | Conditioning | CLIP + T5 text embeddings, GSD, latitude, longitude |
 | Pre-training | 300K steps, Git-10M, global batch 1024, AdamW lr 1e-4, bf16, DeepSpeed ZeRO-2 |
 | Hardware | 8x NVIDIA B200, ~15 days |
+
+<p align="center">
+  <img src="assets/architecture.png" alt="Overview of the GeoCore-9B architecture" width="100%">
+</p>
 
 ### Geospatial Semantic Alignment (GSA)
 
