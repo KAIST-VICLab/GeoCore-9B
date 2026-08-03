@@ -1,3 +1,12 @@
+"""GeoCore-9B diffusion transformer.
+
+Adapted from the FLUX reference implementation by Black Forest Labs
+(https://github.com/black-forest-labs/flux), licensed under Apache-2.0.
+
+Modifications for GeoCore-9B: geospatial metadata conditioning with learnable null
+embeddings (`Flux2.make_vec`), and the Geospatial Semantic Alignment projection head
+(`REPAEmbedder`, hooked at `depth_repa`).
+"""
 import math
 from dataclasses import dataclass, field
 
@@ -9,23 +18,7 @@ from torch.utils.checkpoint import checkpoint
 
 
 @dataclass
-class Flux2Params:
-    in_channels: int = 128
-    context_in_dim: int = 4096
-    hidden_size: int = 6144
-    num_heads: int = 48
-    depth: int = 8
-    depth_repa: int = 8
-    depth_single_blocks: int = 48
-    axes_dim: list[int] = field(default_factory=lambda: [32, 48, 48])
-    theta: int = 2000
-    mlp_ratio: float = 3.0
-    y_in_dim: int = 768
-    z_out_dim: int = 4096
-
-
-@dataclass
-class Klein9BParams:
+class GeoCore9BParams:
     in_channels: int = 128
     context_in_dim: int = 4096
     hidden_size: int = 4096
@@ -41,39 +34,7 @@ class Klein9BParams:
 
 
 @dataclass
-class Klein4BParams:
-    in_channels: int = 128
-    context_in_dim: int = 4096
-    hidden_size: int = 3072
-    num_heads: int = 24
-    depth: int = 5
-    depth_repa: int = 5
-    depth_single_blocks: int = 20
-    axes_dim: list[int] = field(default_factory=lambda: [32, 48, 48])
-    theta: int = 2000
-    mlp_ratio: float = 3.0
-    y_in_dim: int = 768
-    z_out_dim: int = 4096
-
-
-@dataclass
-class TerraNova9BParams:
-    in_channels: int = 128
-    context_in_dim: int = 4096
-    hidden_size: int = 4096
-    num_heads: int = 32
-    depth: int = 8
-    depth_repa: int = 8
-    depth_single_blocks: int = 24
-    axes_dim: list[int] = field(default_factory=lambda: [32, 48, 48])
-    theta: int = 2000
-    mlp_ratio: float = 3.0
-    y_in_dim: int = 768
-    z_out_dim: int = 4096
-
-
-@dataclass
-class TerraNova4BParams:
+class GeoCore4BParams:
     in_channels: int = 128
     context_in_dim: int = 4096
     hidden_size: int = 3072
@@ -89,7 +50,7 @@ class TerraNova4BParams:
 
 
 class Flux2(nn.Module):
-    def __init__(self, params: TerraNova4BParams):
+    def __init__(self, params: GeoCore9BParams):
         super().__init__()
         self.gradient_checkpointing = False
         self.in_channels = params.in_channels

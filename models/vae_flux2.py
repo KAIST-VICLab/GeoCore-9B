@@ -1,3 +1,11 @@
+"""Flux.2 autoencoder.
+
+Adapted from the FLUX reference implementation by Black Forest Labs
+(https://github.com/black-forest-labs/flux), licensed under Apache-2.0.
+
+Used frozen in GeoCore-9B. The pre-trained VAE weights (`ae.safetensors`) are
+distributed separately by Black Forest Labs under their own license.
+"""
 import math
 from dataclasses import dataclass, field
 

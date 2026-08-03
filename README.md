@@ -213,10 +213,10 @@ Loading the exported weights:
 
 ```python
 import torch
-from models.flux2 import Flux2, TerraNova9BParams
+from models.flux2 import Flux2, GeoCore9BParams
 from inference import load_state_dict
 
-model = Flux2(TerraNova9BParams()).to("cuda", torch.bfloat16)
+model = Flux2(GeoCore9BParams()).to("cuda", torch.bfloat16)
 model.load_state_dict(load_state_dict("path/to/huggingface"), strict=True)
 model.eval()
 ```
@@ -254,7 +254,16 @@ scripts/               launch scripts and checkpoint conversion
 }
 ```
 
+## Acknowledgements
+
+The transformer and autoencoder in [`models/`](models/) are adapted from the
+[FLUX reference implementation](https://github.com/black-forest-labs/flux) by Black Forest Labs
+(Apache-2.0). GSA builds on representation alignment for diffusion training, and the frozen
+teacher is [DINOv3-Sat](https://github.com/facebookresearch/dinov3). Pre-training uses the
+[Git-10M](https://huggingface.co/datasets/lcybuaa/Git-10M) dataset from Text2Earth.
+
 ## License
 
-Code is released under the [Apache License 2.0](LICENSE). The Git-10M dataset, the Flux.2 VAE and
-the DINOv3-Sat teacher are governed by their own licenses.
+Code is released under the [Apache License 2.0](LICENSE); see [NOTICE](NOTICE) for attribution of
+adapted third-party code. The Git-10M dataset, the Flux.2 VAE weights and the DINOv3-Sat teacher
+weights are not redistributed here and are governed by their own licenses.

@@ -18,7 +18,7 @@ from accelerate import Accelerator
 from accelerate.logging import get_logger
 from accelerate.utils import ProjectConfiguration, set_seed
 
-from models.flux2 import Flux2, TerraNova4BParams, TerraNova9BParams
+from models.flux2 import Flux2, GeoCore4BParams, GeoCore9BParams
 from loss import SILoss_Flux2
 from utils import load_encoders
 
@@ -182,7 +182,7 @@ def main(args):
     else:
         encoders, encoder_types, architectures = [None], [None], [None]
 
-    model = Flux2(TerraNova9BParams()).to(device)
+    model = Flux2(GeoCore9BParams()).to(device)
     
     if args.base_ckpt and os.path.exists(args.base_ckpt):
         if accelerator.is_main_process:

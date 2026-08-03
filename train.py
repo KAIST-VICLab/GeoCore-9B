@@ -18,7 +18,7 @@ from accelerate import Accelerator
 from accelerate.logging import get_logger
 from accelerate.utils import ProjectConfiguration, set_seed
 
-from models.flux2 import Flux2, TerraNova4BParams, TerraNova9BParams
+from models.flux2 import Flux2, GeoCore4BParams, GeoCore9BParams
 from loss import SILoss_Flux2
 from utils import load_encoders
 
@@ -199,7 +199,7 @@ def main(args):
     else:
         encoders, encoder_types, architectures = [None], [None], [None]
 
-    model = Flux2(TerraNova9BParams()).to(device)
+    model = Flux2(GeoCore9BParams()).to(device)
     ema = deepcopy(model).to(device)  # Create an EMA of the model for use after training
     requires_grad(ema, False)
 

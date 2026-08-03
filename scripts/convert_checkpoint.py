@@ -18,9 +18,9 @@ import torch
 from safetensors.torch import save_file
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from models.flux2 import TerraNova4BParams, TerraNova9BParams
+from models.flux2 import GeoCore4BParams, GeoCore9BParams
 
-PARAMS = {"9b": TerraNova9BParams, "4b": TerraNova4BParams}
+PARAMS = {"9b": GeoCore9BParams, "4b": GeoCore4BParams}
 DTYPES = {"bf16": torch.bfloat16, "fp16": torch.float16, "fp32": torch.float32}
 
 

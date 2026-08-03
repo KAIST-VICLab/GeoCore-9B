@@ -33,7 +33,7 @@ from accelerate.utils import ProjectConfiguration, set_seed
 from peft import LoraConfig, get_peft_model
 from safetensors.torch import load_file
 
-from models.flux2 import Flux2, TerraNova9BParams
+from models.flux2 import Flux2, GeoCore9BParams
 from models.vae_flux2 import AutoEncoder, AutoEncoderParams
 from models.text_encoder import TextEncoder
 from loss import SILoss_Flux2_no_repa
@@ -153,7 +153,7 @@ def main(args):
     latent_size = args.resolution // 16
     img_ids = _prepare_latent_image_ids(latent_size, latent_size, device, weight_dtype)
 
-    model = Flux2(TerraNova9BParams()).to(device)
+    model = Flux2(GeoCore9BParams()).to(device)
 
     ckpt = torch.load(args.base_ckpt, map_location='cpu', weights_only=False)
     if 'ema' in ckpt:

@@ -1,0 +1,20 @@
+GeoCore-9B
+Copyright 2026 Jeonghyeok Do and Munchurl Kim
+
+This product includes software adapted from the FLUX reference implementation
+by Black Forest Labs (https://github.com/black-forest-labs/flux), licensed under
+the Apache License, Version 2.0.
+
+  - models/flux2.py      diffusion transformer blocks, RoPE, modulation and
+                         embedding layers. Modified to add geospatial metadata
+                         conditioning with learnable null embeddings and the
+                         Geospatial Semantic Alignment projection head.
+  - models/vae_flux2.py  autoencoder. Used unmodified apart from formatting.
+
+The following third-party assets are NOT distributed with this repository and
+remain governed by their own licenses:
+
+  - Flux.2 VAE weights (ae.safetensors)  Black Forest Labs
+  - DINOv3-Sat teacher weights           Meta Platforms, Inc.
+  - Git-10M dataset                      CC BY-NC-ND 4.0 (Liu et al., Text2Earth)
+  - CLIP and T5 text encoders            OpenAI / Google, via the HuggingFace Hub

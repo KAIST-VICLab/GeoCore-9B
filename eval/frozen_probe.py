@@ -28,7 +28,7 @@ from PIL import Image
 from safetensors.torch import load_file
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from models.flux2 import Flux2, TerraNova9BParams
+from models.flux2 import Flux2, GeoCore9BParams
 from models.vae_flux2 import AutoEncoder, AutoEncoderParams
 from models.text_encoder import TextEncoder
 
@@ -41,7 +41,7 @@ BLOCKS = {"g4": ("double", 3), "g8": ("double", 7), "g16": ("single", 7), "g24":
 class FeatExtractor:
     def __init__(self, dev, ckpt, vae_dir):
         self.dev = dev
-        self.model = Flux2(TerraNova9BParams()).to(dev, torch.bfloat16)
+        self.model = Flux2(GeoCore9BParams()).to(dev, torch.bfloat16)
         ck = torch.load(ckpt, map_location="cpu", weights_only=False)
         sd = ck["ema"] if "ema" in ck else ck.get("model", ck)
         self.model.load_state_dict({k.replace("_orig_mod.", ""): v for k, v in sd.items()}, strict=True)

@@ -51,12 +51,12 @@ GitHub repository rather than a stock `diffusers` pipeline.
 import torch
 from huggingface_hub import snapshot_download
 
-from models.flux2 import Flux2, TerraNova9BParams
+from models.flux2 import Flux2, GeoCore9BParams
 from inference import load_state_dict
 
 path = snapshot_download("JeonghyeokDo/GeoCore-9B")
 
-model = Flux2(TerraNova9BParams()).to("cuda", torch.bfloat16)
+model = Flux2(GeoCore9BParams()).to("cuda", torch.bfloat16)
 model.load_state_dict(load_state_dict(path), strict=True)
 model.eval()
 ```

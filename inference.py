@@ -19,7 +19,7 @@ import torch
 from safetensors.torch import load_file
 from torchvision.utils import save_image
 
-from models.flux2 import Flux2, TerraNova4BParams, TerraNova9BParams
+from models.flux2 import Flux2, GeoCore4BParams, GeoCore9BParams
 from models.vae_flux2 import AutoEncoder, AutoEncoderParams
 from models.text_encoder import TextEncoder
 from samplers import euler_sampler_flux2
@@ -27,7 +27,7 @@ from samplers import euler_sampler_flux2
 torch.set_float32_matmul_precision('high')
 
 NULL_META = -999.0
-PARAMS = {"9b": TerraNova9BParams, "4b": TerraNova4BParams}
+PARAMS = {"9b": GeoCore9BParams, "4b": GeoCore4BParams}
 
 
 def _prepare_latent_image_ids(height, width, device, dtype):
