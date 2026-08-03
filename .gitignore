@@ -1,0 +1,24 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+
+# experiment outputs
+exps/
+exps_lora/
+exps_downstream/
+logs/
+wandb/
+samples/
+eval/disc_probe/
+
+# weights are distributed via the Hub, not git
+*.pt
+*.pth
+*.safetensors
+huggingface/*.safetensors
+huggingface/model.safetensors.index.json
+
+.DS_Store
+.idea/
+.vscode/

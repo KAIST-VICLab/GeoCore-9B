@@ -1,0 +1,23 @@
+{
+  "in_channels": 128,
+  "context_in_dim": 4096,
+  "hidden_size": 4096,
+  "num_heads": 32,
+  "depth": 8,
+  "depth_repa": 8,
+  "depth_single_blocks": 24,
+  "axes_dim": [
+    32,
+    48,
+    48
+  ],
+  "theta": 2000,
+  "mlp_ratio": 3.0,
+  "y_in_dim": 768,
+  "z_out_dim": 4096,
+  "architecture": "Flux2",
+  "model_size": "9b",
+  "torch_dtype": "bf16",
+  "weights": "ema",
+  "training_steps": 300000
+}
