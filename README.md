@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="https://kaist-viclab.github.io/GeoCore-9B_site/static/assets/geocore-logo-mark-trimmed.png" alt="GeoCore logo" width="112">
+
 # GeoCore-9B: Towards Geo-Aware Generative Foundation Models in Earth Observation
 
 [Jeonghyeok Do](https://jeonghyeokdo.github.io/) &nbsp;·&nbsp;
@@ -7,6 +9,7 @@
 
 Korea Advanced Institute of Science and Technology (KAIST)
 
+[![Paper](https://img.shields.io/badge/Paper-PDF-b5402d?style=for-the-badge)](https://kaist-viclab.github.io/GeoCore-9B_site/static/assets/GeoCore-9B-paper.pdf)
 [![Project Page](https://img.shields.io/badge/Project%20Page-GeoCore--9B-1a6d5a?style=for-the-badge)](https://kaist-viclab.github.io/GeoCore-9B_site/)
 [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Weights-GeoCore--9B-FFD21E?style=for-the-badge)](https://huggingface.co/JeonghyeokDo/GeoCore-9B)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge)](LICENSE)
@@ -19,19 +22,27 @@ Korea Advanced Institute of Science and Technology (KAIST)
 
 </div>
 
-Official implementation of **GeoCore-9B**, a 9-billion-parameter generative foundation model for
-Earth Observation (EO), trained from scratch exclusively on EO data.
+Official implementation of **GeoCore-9B**, a 9.24-billion-parameter Flow Matching DiT for RGB
+Earth Observation (EO) generation. Its DiT backbone is trained from scratch on Git-10M rather than
+initialized from a natural-image diffusion model; the VAE and text encoders are frozen pre-trained
+components.
+
+---
+
+## 📰 News
+
+- **Aug 2026:** Paper, code, pretrained weights, and project page released. 🎉
 
 ---
 
 ## Overview
 
-GeoCore-9B is a Flow Matching Diffusion Transformer (DiT) that natively conditions generation on
-text descriptions **and** continuous geospatial metadata — ground sample distance (GSD), latitude,
-and longitude. Unlike prior EO generative models that fine-tune natural-image priors, it is trained
-from scratch on the global-scale [Git-10M](https://huggingface.co/datasets/lcybuaa/Git-10M) corpus,
-avoiding the perspective biases that conflict with the orthographic, physically-anchored nature of
-satellite imagery.
+GeoCore-9B natively conditions generation on text descriptions, a zoom-derived resolution
+(nominal-GSD) index, latitude, and longitude. Unlike EO generators initialized from natural-image
+diffusion models, its DiT backbone is trained from scratch on the global-scale
+[Git-10M](https://huggingface.co/datasets/lcybuaa/Git-10M) corpus. This avoids initialization from
+natural-image diffusion-generator weights while retaining frozen pre-trained components for
+autoencoding and text conditioning.
 
 | | |
 |---|---|
@@ -56,8 +67,10 @@ teacher and aligned with its dense structural representations.
 L_total = L_FlowMatching + mu * L_GSA        (mu = 0.5)
 ```
 
-Because the teacher and the projection head exist only during training, GSA adds **zero inference
-overhead**. In this codebase GSA appears as:
+The frozen teacher is required only during GSA training and is not loaded for sampling. The released
+checkpoint retains the projection head for compatibility, and the current model forward executes it
+during sampling; the reference code therefore guarantees teacher-free inference, not zero
+projection-head overhead. In this codebase GSA appears as:
 
 | Component | Location |
 |---|---|
@@ -67,25 +80,28 @@ overhead**. In this codebase GSA appears as:
 | Frozen teacher | `load_encoders` in [`utils.py`](utils.py) (`--enc-type dinov3-vit-7b`) |
 | Weight `mu` | `--proj-coeff 0.5` |
 
-`SILoss_Flux2_no_repa` in [`loss.py`](loss.py) is the GSA-free variant used for LoRA and downstream
-adaptation.
+`SILoss_Flux2_no_repa` in [`loss.py`](loss.py) is the GSA-free variant used for LoRA adaptation.
+Progressive full fine-tuning in [`finetune.py`](finetune.py) retains GSA supervision and the frozen
+DINOv3-Sat teacher.
 
 ### Metadata conditioning
 
-GSD `r`, latitude `phi`, and longitude `lambda` are each encoded as 256-dimensional sinusoidal
-features and projected by separate MLP embedders. Their sum is added to the timestep embedding and
+The zoom-derived resolution index `r` (a nominal-GSD proxy), latitude `phi`, and longitude
+`lambda` are each encoded as 256-dimensional sinusoidal features and projected by separate MLP
+embedders. Their sum is added to the timestep embedding and
 the pooled text embedding to form the global conditioning vector that modulates the DiT through
 AdaLN. See `Flux2.make_vec` in [`models/flux2.py`](models/flux2.py).
 
-Missing metadata is not simply zeroed: the model holds **learnable null embeddings**
+Missing conditional metadata is not simply zeroed: the model holds **learnable null embeddings**
 (`null_res_emb`, `null_lon_emb`, `null_lat_emb`) that substitute for absent fields. Passing
-`-999.0` for a field selects its null embedding, which is also how classifier-free guidance dropout
-(`p_cfg = 0.1`) is implemented during training (see `CFGDataset` in
-[`data/dataset.py`](data/dataset.py)).
+`-999.0` selects the corresponding null embedding, and `CFGDataset` uses this behavior for
+conditioning dropout during training. In the current reference sampler, the separate unconditional
+CFG branch supplies zero-valued metadata rather than `-999.0`.
 
-**Resolution convention.** The `res` conditioning value is `17 - z`, where `z` is the Google XYZ
-tile zoom level, so `res = 0` corresponds to roughly 1.2 m/px at the equator and each `+1` doubles
-the GSD (`res = 5` is roughly 38 m/px). Images upscaled during preprocessing have
+**Resolution convention.** The `res` conditioning value is the zoom-derived resolution index
+`17 - z`, where `z` is the Google XYZ tile zoom level. Thus, `res = 0` corresponds to a nominal
+equatorial GSD of roughly 1.2 m/px and each `+1` doubles that proxy (`res = 5` is roughly
+38 m/px). Images upscaled during preprocessing have
 `log2(scale_factor)` subtracted. This is computed in `Git10MDataset.__getitem__`.
 
 ### Preprocessing and data
@@ -102,10 +118,55 @@ Git-10M is consumed in HuggingFace `datasets` format. Preprocessing lives in
 
 ---
 
+## Paper results after adaptation
+
+These values are reported after task-specific LoRA adaptation with the 9B backbone frozen; they are
+not zero-shot scores from the released base checkpoint.
+
+### RSICD text-to-image
+
+| Method | IS ↑ | FID ↓ | CLIP ↑ |
+|---|---:|---:|---:|
+| CRS-Diff | 18.39 | 50.72 | 20.33 |
+| Text2Earth | — | 24.49 | 25.62 |
+| **GeoCore-9B (Ours)** | **22.15** | **18.82** | **27.15** |
+
+### Practical downstream adaptation
+
+| Task | Dataset | Reported metrics |
+|---|---|---|
+| Cloud removal | Sen2-MTC | 20.809 PSNR / 0.799 SSIM / 0.256 LPIPS |
+| SAR-to-optical translation | QXS-SAROPT | 12.05 FID / 0.377 LPIPS / 0.0163 HF-SCC / 0.370 SSIM |
+
+HF-SCC is the corrected, baseline-consistent high-pass spatial correlation coefficient used in the
+matched comparison.
+
+<details>
+<summary><b>Matched 9B ablation of GSA</b></summary>
+
+- RSICD FID: **28.43 → 18.82** (−9.61).
+- QXS-SAROPT FID: **19.92 → 12.05** (−7.87).
+- Sen2-MTC PSNR: **19.553 → 20.809 dB** (+1.256 dB).
+
+All settings other than the pre-training GSA weight are held fixed.
+
+</details>
+
+See the [paper](https://kaist-viclab.github.io/GeoCore-9B_site/static/assets/GeoCore-9B-paper.pdf)
+and [project page](https://kaist-viclab.github.io/GeoCore-9B_site/) for full comparisons,
+qualitative results, metadata interventions, and limitations.
+
+The public repository provides a generic image-conditioned LoRA training hook. Task-specific
+Sen2-MTC/QXS-SAROPT dataset loaders, conditioned inference and evaluation scripts, and the exact
+downstream experiment configurations are not included in this release.
+
+---
+
 ## Installation
 
 ```bash
-git clone <this-repo> && cd GeoCore-9B
+git clone https://github.com/KAIST-VICLab/GeoCore-9B.git
+cd GeoCore-9B
 pip install -r requirements.txt
 ```
 
@@ -117,7 +178,7 @@ their licenses.
 | Asset | Needed for | Source |
 |---|---|---|
 | Git-10M dataset | pre-training, fine-tuning | [`lcybuaa/Git-10M`](https://huggingface.co/datasets/lcybuaa/Git-10M) (CC BY-NC-ND 4.0) |
-| Flux.2 VAE `ae.safetensors` | everything | Black Forest Labs |
+| FLUX.2 VAE `ae.safetensors` | everything | [Black Forest Labs FLUX.2-dev](https://huggingface.co/black-forest-labs/FLUX.2-dev/blob/main/ae.safetensors) |
 | DINOv3-Sat ViT-7B/16 (`sat493m`) | GSA pre-training only | [facebookresearch/dinov3](https://github.com/facebookresearch/dinov3) |
 
 CLIP and T5 text encoders are pulled from the HuggingFace Hub at runtime.
@@ -125,8 +186,13 @@ CLIP and T5 text encoders are pulled from the HuggingFace Hub at runtime.
 ```bash
 export DATA_DIR=/path/to/Git-10M/train
 export VAE_DIR=/path/to/ae.safetensors
-export DINOV3_REPO=/path/to/dinov3      # local clone containing the sat493m checkpoint
+export DINOV3_REPO=/path/to/dinov3      # local DINOv3 clone
 ```
+
+The current DINO loader passes
+`dinov3_vit7b16_pretrain_sat493m-a6675841.pth` as a relative checkpoint filename; make sure that
+filename is resolvable by the local DINOv3 hub entrypoint, or update [`utils.py`](utils.py) to pass
+its absolute path.
 
 ---
 
@@ -138,9 +204,9 @@ export DINOV3_REPO=/path/to/dinov3      # local clone containing the sat493m che
 bash scripts/train_pretrain.sh
 ```
 
-Reproduces the paper run: 300K steps, global batch 1024, `--proj-coeff 0.5`, ZeRO-2 across 8 GPUs
-via [`configs/zero2_8gpu.yaml`](configs/zero2_8gpu.yaml). The exact hyperparameters are recorded in
-[`configs/pretrain_geocore9b.json`](configs/pretrain_geocore9b.json).
+Launches the paper configuration: 300K steps, global batch 1024, `--proj-coeff 0.5`, and ZeRO-2
+across 8 GPUs via [`configs/zero2_8gpu.yaml`](configs/zero2_8gpu.yaml). The exact hyperparameters
+are recorded in [`configs/pretrain_geocore9b.json`](configs/pretrain_geocore9b.json).
 
 ### Full fine-tuning (progressive refinement)
 
@@ -148,7 +214,8 @@ via [`configs/zero2_8gpu.yaml`](configs/zero2_8gpu.yaml). The exact hyperparamet
 BASE_CKPT=/path/to/0300000.pt bash scripts/train_finetune.sh
 ```
 
-Continues training on the `img_quality_score >= 4.8` subset of Git-10M.
+Continues training on the `img_quality_score >= 4.8` subset of Git-10M while retaining GSA
+supervision; the DINOv3-Sat teacher is therefore still required.
 
 ### LoRA fine-tuning
 
@@ -175,24 +242,29 @@ The class is constructed as `MyPairedDataset(data_dir)` and each item must be
 `(cond_img, target_img, caption, meta)`, where `cond_img` and `target_img` are `[3, H, W]` tensors in
 `[-1, 1]` and `meta` is a dict with float tensors `res`, `lon`, `lat` (use `-999.0` when unknown).
 Checkpoints save the LoRA adapter plus `img_in_weight.pt`, since `img_in` is trained outside LoRA.
+The standalone [`inference.py`](inference.py) does not currently accept a conditioning image or
+restore the expanded `img_in_weight.pt`; conditioned downstream inference requires a task-specific
+wrapper that is not included here.
 
 ### Inference
 
 ```bash
 python inference.py \
-    --ckpt /path/to/0300000.pt --vae "$VAE_DIR" \
+    --ckpt /path/to/GeoCore-9B --vae "$VAE_DIR" \
     --prompt "A satellite view of a highly dense urban city with towering skyscrapers" \
     --lon 126.97 --lat 37.56 --res 0.0 \
     --num-samples 4 --out samples/
 ```
 
 Omit any of `--res`, `--lon`, `--lat` to generate without that condition (the learned null embedding
-is used instead). Add `--lora /path/to/lora_adapter` to merge an adapter before sampling.
+is used instead). Add `--lora /path/to/lora_adapter` to merge a standard text-to-image adapter
+before sampling. Image-conditioned adapters require the separate conditioned inference path noted
+above.
 `--ckpt` accepts a training `.pt`, a converted `.safetensors` file, or a sharded directory.
 
 ### Frozen probes
 
-Linear probes on frozen DiT features, following the pre-registered protocol described in
+Linear probes on frozen DiT features, following the fixed protocol implemented in
 [`eval/frozen_probe.py`](eval/frozen_probe.py): `z_tau = (1 - tau) z_0 + tau * eps` with `tau = 0.25`,
 one forward pass with empty text and null metadata, features hooked at global blocks
 `{4, 8, 16, 24}` (block 8 is the GSA-aligned one).
@@ -205,7 +277,8 @@ python eval/frozen_probe.py --task eurosat \
 
 Tasks: `loveda` (7-class segmentation, mIoU), `eurosat` (10-class classification, top-1), `bright`
 (siamese building-damage change detection, mIoU). `--data-root` must contain `LoveDA/`,
-`EuroSAT_RGB/` and `BRIGHT/`.
+`EuroSAT_RGB/` and `BRIGHT/`. The current probe script requires the original training `.pt`
+checkpoint and does not accept the released sharded safetensors directly.
 
 ### Metrics
 
@@ -215,6 +288,13 @@ validation and downstream evaluation.
 ---
 
 ## Pre-trained weights
+
+The released EMA weights are available as sharded bf16 safetensors on
+[Hugging Face](https://huggingface.co/JeonghyeokDo/GeoCore-9B). The reference
+[`inference.py`](inference.py) accepts this sharded directory. At present,
+[`finetune.py`](finetune.py), [`finetune_lora.py`](finetune_lora.py), and
+[`eval/frozen_probe.py`](eval/frozen_probe.py) require the original training `.pt` checkpoint,
+which is not part of the public Hugging Face release.
 
 Convert the training checkpoint into sharded bf16 safetensors for the Hub. The training `.pt`
 bundles the DeepSpeed ZeRO-2 optimizer state (~65 GB); the export keeps only the EMA weights
@@ -237,6 +317,10 @@ model = Flux2(GeoCore9BParams()).to("cuda", torch.bfloat16)
 model.load_state_dict(load_state_dict("path/to/huggingface"), strict=True)
 model.eval()
 ```
+
+The reference inference script loads the 9.24B DiT, T5-XXL, CLIP-L/14, and the VAE onto one device.
+Their bf16 parameters alone require more than approximately 41 GB before activation memory; the
+current script does not provide CPU offloading or a supported 24 GB single-GPU path.
 
 ---
 
@@ -267,17 +351,23 @@ scripts/               launch scripts and checkpoint conversion
 @article{do2026geocore,
   title   = {GeoCore-9B: Towards Geo-Aware Generative Foundation Models in Earth Observation},
   author  = {Do, Jeonghyeok and Kim, Munchurl},
-  year    = {2026}
+  year    = {2026},
+  url     = {https://kaist-viclab.github.io/GeoCore-9B_site/}
 }
 ```
 
 ## Acknowledgements
 
 The transformer and autoencoder in [`models/`](models/) are adapted from the
-[FLUX reference implementation](https://github.com/black-forest-labs/flux) by Black Forest Labs
+[FLUX.2 reference implementation](https://github.com/black-forest-labs/flux2) by Black Forest Labs
 (Apache-2.0). GSA builds on representation alignment for diffusion training, and the frozen
 teacher is [DINOv3-Sat](https://github.com/facebookresearch/dinov3). Pre-training uses the
 [Git-10M](https://huggingface.co/datasets/lcybuaa/Git-10M) dataset from Text2Earth.
+
+This work was supported by the National Research Foundation of Korea (NRF) grant funded by the
+Korean government (MSIT) under the Sejong Science Fellowship Program (RS-2026-25484549), for
+the project “Visualizing the Invisible Earth: A Reliability-Aware All-in-One SAR Analysis Framework
+with Foundation Models.”
 
 ## License
 
