@@ -204,8 +204,8 @@ its absolute path.
 bash scripts/train_pretrain.sh
 ```
 
-Launches the paper configuration: 300K steps, global batch 1024, `--proj-coeff 0.5`, ZeRO-2 across 8 GPUs
-via [`configs/zero2_8gpu.yaml`](configs/zero2_8gpu.yaml). The exact hyperparameters are recorded in
+Launches the paper configuration: 300K steps, global batch 1024, `--proj-coeff 0.5`, and ZeRO-2
+across 8 GPUs via [`configs/zero2_8gpu.yaml`](configs/zero2_8gpu.yaml). The exact hyperparameters are recorded in
 [`configs/pretrain_geocore9b.json`](configs/pretrain_geocore9b.json).
 
 ### Full fine-tuning (progressive refinement)
@@ -250,15 +250,15 @@ wrapper that is not included here.
 
 ```bash
 python inference.py \
-    --ckpt /path/to/0300000.pt --vae "$VAE_DIR" \
+    --ckpt /path/to/GeoCore-9B --vae "$VAE_DIR" \
     --prompt "A satellite view of a highly dense urban city with towering skyscrapers" \
     --lon 126.97 --lat 37.56 --res 0.0 \
     --num-samples 4 --out samples/
 ```
 
 Omit any of `--res`, `--lon`, `--lat` to generate without that condition (the learned null embedding
-is used instead). Add `--lora /path/to/lora_adapter` to merge a standard text-to-image adapter before sampling.
-Image-conditioned adapters require the separate conditioned inference path noted above.
+is used instead). Add `--lora /path/to/lora_adapter` to merge a standard text-to-image adapter
+before sampling. Image-conditioned adapters require the separate conditioned inference path noted above.
 `--ckpt` accepts a training `.pt`, a converted `.safetensors` file, or a sharded directory.
 
 ### Frozen probes
