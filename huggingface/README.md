@@ -36,12 +36,19 @@ exclusively on EO data. GeoCore-9B is a Flow Matching Diffusion Transformer that
 generation on text **and** continuous geospatial metadata — ground sample distance (GSD), latitude
 and longitude.
 
+> [!NOTE]
+> **2026-08-04 — corrected weights.** The initial upload accidentally contained an EMA state that
+> was never updated during training (pure initialization weights — see
+> [GitHub issue #2](https://github.com/KAIST-VICLab/GeoCore-9B/issues/2)). The current files are the
+> final 300K-step training weights, verified to load strictly and denoise correctly. If you
+> downloaded the weights before this date, please re-download and check them against `SHA256SUMS`.
+
 ## Model details
 
 | | |
 |---|---|
 | Parameters | 9.24 B |
-| Weights | EMA, bfloat16, sharded safetensors |
+| Weights | final training weights (non-EMA), bfloat16, sharded safetensors |
 | Architecture | Flow Matching DiT — 8 double-stream + 24 single-stream blocks, hidden 4096, 32 heads |
 | Conditioning | CLIP + T5 text embeddings, GSD, latitude, longitude |
 | Training data | [Git-10M](https://huggingface.co/datasets/lcybuaa/Git-10M) |

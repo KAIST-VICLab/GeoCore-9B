@@ -108,13 +108,26 @@ def update_ema(ema_model, model, decay=0.9999):
         msd = model.state_dict()
         esd = ema_model.state_dict()
 
+        unmatched = []
         for name, param in msd.items():
-            clean_name = name.replace('_orig_mod.', '')
+            # torch.compile prepends '_orig_mod.' and DDP/DeepSpeed prepend
+            # 'module.' to every key, possibly stacked ('module._orig_mod.').
+            clean_name = name
+            while clean_name.startswith(('module.', '_orig_mod.')):
+                clean_name = clean_name.split('.', 1)[1]
 
             if clean_name in esd:
                 esd[clean_name].copy_(
                     esd[clean_name] * decay + param.detach().data * (1 - decay)
                 )
+            else:
+                unmatched.append(name)
+
+        if unmatched:
+            raise RuntimeError(
+                f"update_ema: {len(unmatched)}/{len(msd)} model keys have no EMA "
+                f"match (e.g. '{unmatched[0]}'); EMA would silently go stale."
+            )
 
 
 def create_logger(logging_dir):

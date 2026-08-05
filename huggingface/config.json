@@ -18,6 +18,6 @@
   "architecture": "Flux2",
   "model_size": "9b",
   "torch_dtype": "bf16",
-  "weights": "ema",
+  "weights": "model",
   "training_steps": 300000
 }

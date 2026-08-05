@@ -289,21 +289,23 @@ validation and downstream evaluation.
 
 ## Pre-trained weights
 
-The released EMA weights are available as sharded bf16 safetensors on
-[Hugging Face](https://huggingface.co/JeonghyeokDo/GeoCore-9B). The reference
+The released weights (the final 300K-step training state) are available as sharded bf16
+safetensors on [Hugging Face](https://huggingface.co/JeonghyeokDo/GeoCore-9B). The reference
 [`inference.py`](inference.py) accepts this sharded directory. At present,
 [`finetune.py`](finetune.py), [`finetune_lora.py`](finetune_lora.py), and
 [`eval/frozen_probe.py`](eval/frozen_probe.py) require the original training `.pt` checkpoint,
 which is not part of the public Hugging Face release.
 
 Convert the training checkpoint into sharded bf16 safetensors for the Hub. The training `.pt`
-bundles the DeepSpeed ZeRO-2 optimizer state (~65 GB); the export keeps only the EMA weights
-(~18.5 GB), which are the ones reported in the paper.
+bundles the DeepSpeed ZeRO-2 optimizer state (~65 GB); the export keeps only the model weights
+(~18.5 GB). The published GeoCore-9B weights are the final 300K-step training state: the EMA of
+that run never accumulated due to a key-prefix bug in `update_ema` (fixed — see GitHub issue #2),
+and the converter now refuses to export a state dict whose zero-initialized layers are still zero.
 
 ```bash
 python scripts/convert_checkpoint.py \
     --ckpt exps/GeoCore-9B/checkpoints/0300000.pt \
-    --out huggingface/ --weights ema --dtype bf16
+    --out huggingface/ --weights model --dtype bf16
 ```
 
 Loading the exported weights:

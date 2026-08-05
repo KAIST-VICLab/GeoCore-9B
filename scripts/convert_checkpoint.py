@@ -23,6 +23,21 @@ from models.flux2 import GeoCore4BParams, GeoCore9BParams
 PARAMS = {"9b": GeoCore9BParams, "4b": GeoCore4BParams}
 DTYPES = {"bf16": torch.bfloat16, "fp16": torch.float16, "fp32": torch.float32}
 
+# Layers the architecture zero-initialises. If they are still all-zero at export
+# time, the state dict is untrained (e.g. an EMA that never received updates).
+ZERO_INIT_PROBES = (
+    "final_layer.linear.weight",
+    "time_in.out_layer.weight",
+    "double_stream_modulation_img.lin.weight",
+)
+
+
+def strip_wrapper_prefixes(name):
+    """Drop leading 'module.' / '_orig_mod.' added by DDP/DeepSpeed/torch.compile."""
+    while name.startswith(("module.", "_orig_mod.")):
+        name = name.split(".", 1)[1]
+    return name
+
 
 def shard_state_dict(state_dict, max_shard_bytes):
     """Greedily pack tensors into shards of at most max_shard_bytes."""
@@ -43,8 +58,8 @@ def main():
     ap = argparse.ArgumentParser(description="Export GeoCore-9B weights as safetensors")
     ap.add_argument("--ckpt", required=True, help="Training checkpoint (.pt)")
     ap.add_argument("--out", required=True, help="Output directory")
-    ap.add_argument("--weights", default="ema", choices=["ema", "model"],
-                    help="EMA weights are the ones reported in the paper")
+    ap.add_argument("--weights", default="model", choices=["ema", "model"],
+                    help="Which state dict to export ('model' is the raw trained weights)")
     ap.add_argument("--dtype", default="bf16", choices=list(DTYPES))
     ap.add_argument("--model-size", default="9b", choices=list(PARAMS))
     ap.add_argument("--max-shard-size-gb", type=float, default=5.0)
@@ -59,11 +74,19 @@ def main():
         raise KeyError(f"'{args.weights}' not found in checkpoint; keys are {list(ckpt)}")
 
     state_dict = {
-        k.replace("_orig_mod.", ""): v.to(dtype).contiguous()
+        strip_wrapper_prefixes(k): v.to(dtype).contiguous()
         for k, v in ckpt[args.weights].items()
     }
     steps = ckpt.get("steps")
     del ckpt
+
+    dead = [k for k in ZERO_INIT_PROBES
+            if k in state_dict and not state_dict[k].abs().any()]
+    if dead:
+        raise RuntimeError(
+            f"'{args.weights}' state looks untrained: {dead} are still all-zero "
+            f"(zero-init values). Refusing to export. See GitHub issue #2."
+        )
 
     total_params = sum(v.numel() for v in state_dict.values())
     total_bytes = sum(v.numel() * v.element_size() for v in state_dict.values())
