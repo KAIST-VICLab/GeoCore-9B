@@ -4,7 +4,7 @@
 set -euo pipefail
 
 DATA_DIR=${DATA_DIR:?"set DATA_DIR to the fine-tuning dataset root"}
-VAE_DIR=${VAE_DIR:?"set VAE_DIR to the Flux.2 VAE weights (Apache-2.0 copy: FLUX.2-klein-base-4B vae/diffusion_pytorch_model.safetensors)"}
+VAE_DIR=${VAE_DIR:?"set VAE_DIR to the Flux.2 VAE (Apache-2.0), e.g. the vae/ folder shipped with the GeoCore-9B weights"}
 BASE_CKPT=${BASE_CKPT:?"set BASE_CKPT to the pre-trained GeoCore-9B checkpoint"}
 
 accelerate launch --config_file configs/zero2_8gpu.yaml finetune_lora.py \

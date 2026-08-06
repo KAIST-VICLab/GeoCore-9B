@@ -3,7 +3,7 @@
 set -euo pipefail
 
 CKPT=${CKPT:?"set CKPT to a checkpoint (.pt) or a converted safetensors directory"}
-VAE_DIR=${VAE_DIR:?"set VAE_DIR to the Flux.2 VAE weights (Apache-2.0 copy: FLUX.2-klein-base-4B vae/diffusion_pytorch_model.safetensors)"}
+VAE_DIR=${VAE_DIR:?"set VAE_DIR to the Flux.2 VAE (Apache-2.0), e.g. the vae/ folder shipped with the GeoCore-9B weights"}
 
 python inference.py \
     --ckpt "$CKPT" \
