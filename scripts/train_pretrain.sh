@@ -3,7 +3,7 @@
 set -euo pipefail
 
 DATA_DIR=${DATA_DIR:?"set DATA_DIR to the Git-10M root"}
-VAE_DIR=${VAE_DIR:?"set VAE_DIR to the Flux2 ae.safetensors"}
+VAE_DIR=${VAE_DIR:?"set VAE_DIR to the Flux.2 VAE weights (Apache-2.0 copy: FLUX.2-klein-base-4B vae/diffusion_pytorch_model.safetensors)"}
 DINOV3_REPO=${DINOV3_REPO:?"set DINOV3_REPO to a local dinov3 clone with the sat493m weights"}
 
 accelerate launch --config_file configs/zero2_8gpu.yaml train.py \

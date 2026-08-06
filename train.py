@@ -23,8 +23,7 @@ from loss import SILoss_Flux2
 from utils import load_encoders
 
 from data.dataset import Git10M_T2I
-from safetensors.torch import load_file
-from models.vae_flux2 import AutoEncoder, AutoEncoderParams
+from models.vae_flux2 import load_autoencoder
 from models.text_encoder import TextEncoder
 
 # import wandb_utils
@@ -216,13 +215,8 @@ def main(args):
     ema = deepcopy(model).to(device)  # Create an EMA of the model for use after training
     requires_grad(ema, False)
 
-    # FLUX 2.0 VAE
-    vae_params = AutoEncoderParams()
-    vae = AutoEncoder(vae_params)
-    state_dict = load_file(args.vae_dir)
-    vae.load_state_dict(state_dict)
-    vae = vae.to(device, dtype=weight_dtype)
-    vae.eval()
+    # FLUX 2.0 VAE (Apache-2.0 copy from FLUX.2-klein-base-4B; BFL layout also accepted)
+    vae = load_autoencoder(args.vae_dir, device=device, dtype=weight_dtype)
     requires_grad(vae, False)
 
     # T5 and CLIP text encoder
@@ -492,7 +486,9 @@ def parse_args(input_args=None):
     parser.add_argument("--resume-step", type=int, default=0)
 
     # model
-    parser.add_argument("--vae-dir", type=str, required=True, help="Path to the Flux2 VAE ae.safetensors")
+    parser.add_argument("--vae-dir", type=str, required=True,
+                        help="Flux.2 VAE weights: vae/diffusion_pytorch_model.safetensors from "
+                             "FLUX.2-klein-base-4B (Apache-2.0). BFL-layout checkpoints also load.")
     parser.add_argument("--fused-attn", action=argparse.BooleanOptionalAction, default=True)
 
     # dataset

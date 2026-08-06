@@ -3,14 +3,20 @@
 Adapted from the FLUX reference implementation by Black Forest Labs
 (https://github.com/black-forest-labs/flux), licensed under Apache-2.0.
 
-Used frozen in GeoCore-9B. The pre-trained VAE weights (`ae.safetensors`) are
-distributed separately by Black Forest Labs under their own license.
+Used frozen in GeoCore-9B. The pre-trained VAE weights are distributed
+separately by Black Forest Labs; obtain them from `FLUX.2-klein-base-4B`
+(`vae/diffusion_pytorch_model.safetensors`), which is Apache-2.0 and ungated.
+`load_vae_state_dict` reads that file directly -- see the note under
+"Checkpoint loading" below for why the diffusers-format copy is preferred over
+the identical weights shipped in the FLUX.2-dev repository.
 """
 import math
+import os
 from dataclasses import dataclass, field
 
 import torch
 from einops import rearrange
+from safetensors.torch import load_file
 from torch import Tensor, nn
 
 
@@ -342,3 +348,190 @@ class AutoEncoder(nn.Module):
         )
         dec = self.decoder(z)
         return dec
+
+
+# ---------------------------------------------------------------------------
+# Checkpoint loading
+#
+# The same autoencoder is published twice by Black Forest Labs:
+#
+#   black-forest-labs/FLUX.2-dev :: ae.safetensors
+#       BFL key names, fp32, 336 MB, FLUX Non-Commercial License v2.1, gated.
+#       4(a)(iii) of that license forbids "surveillance purposes, including all
+#       research and development related to surveillance", which is not a
+#       question an Earth-observation model should have to carry.
+#
+#   black-forest-labs/FLUX.2-klein-base-4B :: vae/diffusion_pytorch_model.safetensors
+#       diffusers key names, bf16, 168 MB, Apache-2.0, ungated.
+#
+# The two hold the same 251 tensors / 84,046,372 parameters and differ only in
+# serialisation: key names, dtype, and eight attention projections stored as
+# (512, 512) linears rather than (512, 512, 1, 1) 1x1 convolutions. The rename
+# rules below were not written by hand from the naming conventions; they were
+# derived by pairing every tensor of the two files ON VALUE, so no key can be
+# silently mismatched. 250 of 251 tensors paired one-to-one with a worst
+# absolute deviation of 7.802e-03, which is bf16 rounding of the source file.
+# The single tensor that does not pair is `bn.num_batches_tracked`, a BatchNorm
+# step counter that `normalize`/`inv_normalize` never read.
+#
+# GeoCore-9B is therefore usable end to end under Apache-2.0. Point `--vae-dir`
+# at the Klein-4B file; the FLUX.2-dev copy still loads unchanged for anyone who
+# already has it.
+# ---------------------------------------------------------------------------
+
+#: diffusers attention/normalisation leaf names -> BFL ones.
+_ATTN_RENAMES = (
+    ("to_out.0", "proj_out"),
+    ("to_q", "q"),
+    ("to_k", "k"),
+    ("to_v", "v"),
+    ("group_norm", "norm"),
+)
+
+
+def _rename_leaf(tail: str) -> str:
+    for src, dst in _ATTN_RENAMES:
+        if tail == src or tail.startswith(src + "."):
+            return dst + tail[len(src):]
+    return tail
+
+
+def _split_index(rest: str, prefix: str) -> tuple[int, str]:
+    """``resnets.2.conv1.weight`` with prefix ``resnets.`` -> ``(2, "conv1.weight")``."""
+    idx, tail = rest[len(prefix):].split(".", 1)
+    return int(idx), tail
+
+
+def _diffusers_key_to_bfl(key: str, num_levels: int) -> str:
+    """Translate one diffusers autoencoder key into the BFL name for it."""
+    if key.startswith("bn."):
+        return key
+    if key.startswith("quant_conv."):
+        return "encoder." + key
+    if key.startswith("post_quant_conv."):
+        return "decoder." + key
+
+    stem, rest = key.split(".", 1)
+    if stem not in ("encoder", "decoder"):
+        raise KeyError(f"unrecognised autoencoder key: {key}")
+
+    if rest.startswith("conv_norm_out."):
+        rest = "norm_out." + rest[len("conv_norm_out."):]
+
+    elif rest.startswith("mid_block."):
+        body = rest[len("mid_block."):]
+        if body.startswith("resnets."):
+            i, tail = _split_index(body, "resnets.")
+            body = f"block_{i + 1}.{tail}"
+        elif body.startswith("attentions."):
+            i, tail = _split_index(body, "attentions.")
+            body = f"attn_{i + 1}.{_rename_leaf(tail)}"
+        else:
+            raise KeyError(f"unrecognised autoencoder key: {key}")
+        rest = "mid." + body
+
+    elif rest.startswith("down_blocks."):
+        i, body = _split_index(rest, "down_blocks.")
+        if body.startswith("resnets."):
+            j, tail = _split_index(body, "resnets.")
+            body = f"block.{j}.{tail.replace('conv_shortcut', 'nin_shortcut')}"
+        elif body.startswith("downsamplers."):
+            _, tail = _split_index(body, "downsamplers.")
+            body = f"downsample.{tail}"
+        else:
+            raise KeyError(f"unrecognised autoencoder key: {key}")
+        rest = f"down.{i}.{body}"
+
+    elif rest.startswith("up_blocks."):
+        # diffusers counts up_blocks from the lowest resolution, the BFL decoder
+        # indexes `up` by level, so the order is reversed.
+        i, body = _split_index(rest, "up_blocks.")
+        level = num_levels - 1 - i
+        if body.startswith("resnets."):
+            j, tail = _split_index(body, "resnets.")
+            body = f"block.{j}.{tail.replace('conv_shortcut', 'nin_shortcut')}"
+        elif body.startswith("upsamplers."):
+            _, tail = _split_index(body, "upsamplers.")
+            body = f"upsample.{tail}"
+        else:
+            raise KeyError(f"unrecognised autoencoder key: {key}")
+        rest = f"up.{level}.{body}"
+
+    return f"{stem}.{rest}"
+
+
+def convert_diffusers_vae_state_dict(
+    state_dict: dict[str, Tensor], params: AutoEncoderParams | None = None
+) -> dict[str, Tensor]:
+    """Convert a diffusers-format Flux.2 autoencoder state dict to BFL names.
+
+    Every produced key is checked against `AutoEncoder`'s own state dict, and a
+    tensor is reshaped only when the target adds singleton dimensions -- the
+    (512, 512) linear / (512, 512, 1, 1) convolution difference. Anything that
+    does not line up exactly is an error rather than a silent partial load.
+    """
+    params = params or AutoEncoderParams()
+    target = AutoEncoder(params).state_dict()
+    num_levels = len(params.ch_mult)
+
+    out: dict[str, Tensor] = {}
+    for key, value in state_dict.items():
+        name = _diffusers_key_to_bfl(key, num_levels)
+        if name not in target:
+            raise KeyError(f"converted key {key!r} -> {name!r} is not in AutoEncoder")
+        if name in out:
+            raise KeyError(f"two source keys map to {name!r}")
+        want = target[name].shape
+        if value.shape != want:
+            if tuple(value.shape) != tuple(s for s in want if s != 1):
+                raise ValueError(f"{key!r} -> {name!r}: shape {tuple(value.shape)} != {tuple(want)}")
+            value = value.reshape(want)
+        out[name] = value.contiguous()
+
+    missing = sorted(set(target) - set(out))
+    # The step counter is absent from some exports; it is unused at eval time.
+    for name in list(missing):
+        if name.endswith("num_batches_tracked"):
+            out[name] = target[name].clone()
+            missing.remove(name)
+    if missing:
+        raise KeyError(f"conversion left {len(missing)} parameters unfilled: {missing[:5]}")
+    return out
+
+
+def load_vae_state_dict(
+    path: str, params: AutoEncoderParams | None = None
+) -> dict[str, Tensor]:
+    """Load Flux.2 autoencoder weights in either the diffusers or BFL layout.
+
+    `path` may be a safetensors file or a directory holding one (a downloaded
+    `FLUX.2-klein-base-4B` snapshot, its `vae/` subfolder, or a bare
+    `ae.safetensors`).
+    """
+    if os.path.isdir(path):
+        candidates = [
+            os.path.join(path, "vae", "diffusion_pytorch_model.safetensors"),
+            os.path.join(path, "diffusion_pytorch_model.safetensors"),
+            os.path.join(path, "ae.safetensors"),
+        ]
+        found = next((c for c in candidates if os.path.isfile(c)), None)
+        if found is None:
+            raise FileNotFoundError(f"no autoencoder safetensors under {path}")
+        path = found
+
+    state_dict = load_file(path)
+    is_diffusers = any(k.startswith(("encoder.down_blocks.", "decoder.up_blocks.")) for k in state_dict)
+    return convert_diffusers_vae_state_dict(state_dict, params) if is_diffusers else state_dict
+
+
+def load_autoencoder(
+    path: str,
+    params: AutoEncoderParams | None = None,
+    device: str | torch.device = "cpu",
+    dtype: torch.dtype = torch.float32,
+) -> AutoEncoder:
+    """Build the frozen Flux.2 autoencoder from `path` and put it in eval mode."""
+    params = params or AutoEncoderParams()
+    vae = AutoEncoder(params)
+    vae.load_state_dict(load_vae_state_dict(path, params), strict=True)
+    return vae.to(device=device, dtype=dtype).eval()

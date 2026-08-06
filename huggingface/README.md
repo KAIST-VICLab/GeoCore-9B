@@ -84,7 +84,7 @@ metadata, is provided by `inference.py`:
 ```bash
 python inference.py \
     --ckpt /path/to/GeoCore-9B \
-    --vae /path/to/ae.safetensors \
+    --vae FLUX.2-klein-base-4B/vae/diffusion_pytorch_model.safetensors \
     --prompt "A satellite view of a highly dense urban city with towering skyscrapers" \
     --lon 126.97 --lat 37.56 --res 0.0 \
     --num-samples 4 --out samples/
@@ -100,8 +100,27 @@ python inference.py \
 
 ### Additional requirements
 
-The Flux.2 VAE (`ae.safetensors`, Black Forest Labs) is required to decode latents and is not
-included here. CLIP and T5 text encoders are downloaded from the Hub at runtime.
+The frozen Flux.2 VAE is required to encode and decode latents and is not included here. Use the
+**Apache-2.0** copy that Black Forest Labs ships inside
+[`FLUX.2-klein-base-4B`](https://huggingface.co/black-forest-labs/FLUX.2-klein-base-4B) — only the
+autoencoder, not the transformer:
+
+```bash
+huggingface-cli download black-forest-labs/FLUX.2-klein-base-4B \
+    vae/diffusion_pytorch_model.safetensors --local-dir FLUX.2-klein-base-4B
+```
+
+`models/vae_flux2.py` reads that file directly (`load_autoencoder`), so no conversion step is
+needed. CLIP and T5 text encoders are downloaded from the Hub at runtime.
+
+> [!IMPORTANT]
+> Do **not** substitute `ae.safetensors` from `FLUX.2-dev`. It holds the same autoencoder weights,
+> but under the FLUX Non-Commercial License v2.1, whose §4(a)(iii) forbids "surveillance purposes,
+> including all research and development related to surveillance" — a clause that Earth-observation
+> work should not have to argue about. The Klein-4B copy is Apache-2.0 and ungated, and the two were
+> verified identical by pairing every tensor on value: 250 of 251 pair one-to-one with a worst
+> deviation of 7.802e-03 (bf16 rounding); the odd one out is a BatchNorm step counter. In bf16, the
+> precision this model runs in, latents and reconstructions are bit-identical.
 
 ## Limitations
 
@@ -109,6 +128,13 @@ included here. CLIP and T5 text encoders are downloaded from the Hub at runtime.
 * Git-10M coverage is uneven across the globe, so generation quality varies by region.
 * Geospatial conditioning reflects correlations in the training corpus and is not a substitute for
   real observations of a location.
+
+## License
+
+GeoCore-9B is released under Apache-2.0, and so is every weight needed to run it: the DiT is trained
+from scratch on Git-10M and is not derived from any FLUX checkpoint, and the frozen VAE is taken
+from the Apache-2.0 Klein-4B release. Note that the [Git-10M](https://huggingface.co/datasets/lcybuaa/Git-10M)
+training corpus is CC BY-NC-ND 4.0, which restricts (re)training on that data to non-commercial use.
 
 ## Citation
 

@@ -25,11 +25,10 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from PIL import Image
-from safetensors.torch import load_file
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from models.flux2 import Flux2, GeoCore9BParams
-from models.vae_flux2 import AutoEncoder, AutoEncoderParams
+from models.vae_flux2 import load_autoencoder
 from models.text_encoder import TextEncoder
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -47,9 +46,7 @@ class FeatExtractor:
         self.model.load_state_dict({k.replace("_orig_mod.", ""): v for k, v in sd.items()}, strict=True)
         self.model.eval()
         del ck, sd
-        self.vae = AutoEncoder(AutoEncoderParams()).to(dev, torch.bfloat16)
-        self.vae.load_state_dict(load_file(vae_dir))
-        self.vae.eval()
+        self.vae = load_autoencoder(vae_dir, device=dev, dtype=torch.bfloat16)
         self.te = TextEncoder(device=dev, dtype=torch.bfloat16)
         self.te.encoder_clip.eval(); self.te.encoder_t5.eval()
         self.cap = {}
@@ -316,7 +313,9 @@ def main():
     ap = argparse.ArgumentParser(description="Frozen linear probes on GeoCore-9B DiT features")
     ap.add_argument("--task", required=True, choices=["loveda", "eurosat", "bright"])
     ap.add_argument("--ckpt", required=True, help="Pre-trained GeoCore-9B checkpoint (.pt)")
-    ap.add_argument("--vae-dir", required=True, help="Path to the Flux2 VAE ae.safetensors")
+    ap.add_argument("--vae-dir", required=True,
+                    help="Flux.2 VAE weights: vae/diffusion_pytorch_model.safetensors from "
+                         "FLUX.2-klein-base-4B (Apache-2.0). BFL-layout checkpoints also load.")
     ap.add_argument("--data-root", required=True,
                     help="Directory holding LoveDA/, EuroSAT_RGB/ and BRIGHT/")
     ap.add_argument("--out", default=os.path.join(HERE, "disc_probe"))
