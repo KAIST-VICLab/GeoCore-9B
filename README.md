@@ -175,19 +175,51 @@ pip install -r requirements.txt
 None of the following are redistributed here; download them from their original sources and respect
 their licenses.
 
-| Asset | Needed for | Source |
-|---|---|---|
-| Git-10M dataset | pre-training, fine-tuning | [`lcybuaa/Git-10M`](https://huggingface.co/datasets/lcybuaa/Git-10M) (CC BY-NC-ND 4.0) |
-| FLUX.2 VAE `ae.safetensors` | everything | [Black Forest Labs FLUX.2-dev](https://huggingface.co/black-forest-labs/FLUX.2-dev/blob/main/ae.safetensors) |
-| DINOv3-Sat ViT-7B/16 (`sat493m`) | GSA pre-training only | [facebookresearch/dinov3](https://github.com/facebookresearch/dinov3) |
+| Asset | Needed for | Source | License |
+|---|---|---|---|
+| Git-10M dataset | pre-training, fine-tuning | [`lcybuaa/Git-10M`](https://huggingface.co/datasets/lcybuaa/Git-10M) | CC BY-NC-ND 4.0 |
+| FLUX.2 VAE `vae/diffusion_pytorch_model.safetensors` | everything | [`black-forest-labs/FLUX.2-klein-base-4B`](https://huggingface.co/black-forest-labs/FLUX.2-klein-base-4B/blob/main/vae/diffusion_pytorch_model.safetensors) | Apache-2.0, ungated |
+| DINOv3-Sat ViT-7B/16 (`sat493m`) | GSA pre-training only | [facebookresearch/dinov3](https://github.com/facebookresearch/dinov3) | DINOv3 License |
 
 CLIP and T5 text encoders are pulled from the HuggingFace Hub at runtime.
 
 ```bash
 export DATA_DIR=/path/to/Git-10M/train
-export VAE_DIR=/path/to/ae.safetensors
+export VAE_DIR=/path/to/FLUX.2-klein-base-4B/vae/diffusion_pytorch_model.safetensors
 export DINOV3_REPO=/path/to/dinov3      # local DINOv3 clone
 ```
+
+#### Which copy of the FLUX.2 VAE
+
+Only the autoencoder of `FLUX.2-klein-base-4B` is needed, not its transformer:
+
+```bash
+huggingface-cli download black-forest-labs/FLUX.2-klein-base-4B \
+    vae/diffusion_pytorch_model.safetensors --local-dir /path/to/FLUX.2-klein-base-4B
+```
+
+Black Forest Labs publishes this autoencoder twice. The copy inside
+`FLUX.2-klein-base-4B` is **Apache-2.0 and ungated**; the `ae.safetensors` of
+`FLUX.2-dev` holds the same weights under the FLUX Non-Commercial License v2.1,
+whose §4(a)(iii) forbids *"surveillance purposes, including all research and
+development related to surveillance"* — not a clause an Earth-observation model
+should ask its users to reason about. GeoCore-9B therefore standardises on the
+Apache-2.0 copy, and the whole pipeline is usable under Apache-2.0.
+
+The two files differ only in serialisation: key names (diffusers vs BFL), dtype
+(bf16 vs fp32), and eight attention projections stored as `(512, 512)` linears
+rather than `(512, 512, 1, 1)` 1×1 convolutions. `load_vae_state_dict` in
+[`models/vae_flux2.py`](models/vae_flux2.py) accepts either layout, so
+`--vae-dir` takes the Klein-4B file directly and no conversion step is involved.
+The rename rules were derived by pairing the two files tensor-by-tensor **on
+value** rather than by assuming the naming convention: 250 of 251 tensors pair
+one-to-one with a worst absolute deviation of `7.802e-03` (bf16 rounding of the
+source file), and the one that does not is `bn.num_batches_tracked`, a BatchNorm
+step counter the frozen codec never reads. Cast to bf16 — how `train.py` and
+`inference.py` run the VAE — the two files give **bit-identical** latents and
+reconstructions; in fp32 they differ by at most `6.0e-02` in the latent and
+`2.3e-02` in the decoded image (range `[-1, 1]`), with round-trip PSNR
+36.3961 dB against 36.4056 dB on the same crops.
 
 The current DINO loader passes
 `dinov3_vit7b16_pretrain_sat493m-a6675841.pth` as a relative checkpoint filename; make sure that
@@ -337,7 +369,7 @@ loss.py                flow matching objective, with and without GSA
 samplers.py            Euler / Euler-Maruyama flow matching samplers
 utils.py               DINOv3-Sat teacher loading
 models/flux2.py        DiT backbone, metadata conditioning, GSA head
-models/vae_flux2.py    Flux.2 autoencoder
+models/vae_flux2.py    Flux.2 autoencoder, diffusers/BFL checkpoint loading
 models/text_encoder.py CLIP + T5 text encoders
 data/                  Git-10M dataset, metadata extraction, CFG dropout
 eval/                  frozen linear probes, image quality metrics
@@ -374,5 +406,13 @@ with Foundation Models.”
 ## License
 
 Code is released under the [Apache License 2.0](LICENSE); see [NOTICE](NOTICE) for attribution of
-adapted third-party code. The Git-10M dataset, the Flux.2 VAE weights and the DINOv3-Sat teacher
-weights are not redistributed here and are governed by their own licenses.
+adapted third-party code. The released GeoCore-9B weights are also Apache-2.0: the DiT is trained
+from scratch on Git-10M and is not derived from any FLUX checkpoint.
+
+The Git-10M dataset, the Flux.2 VAE weights and the DINOv3-Sat teacher weights are not
+redistributed here and are governed by their own licenses. The frozen Flux.2 VAE is the
+**Apache-2.0** copy from
+[`FLUX.2-klein-base-4B`](https://huggingface.co/black-forest-labs/FLUX.2-klein-base-4B); the
+identical weights distributed in `FLUX.2-dev` are **not** used, because the FLUX Non-Commercial
+License v2.1 §4(a)(iii) forbids research and development related to surveillance. Git-10M is
+CC BY-NC-ND 4.0 and therefore restricts (re)training to non-commercial use.

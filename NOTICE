@@ -9,12 +9,24 @@ the Apache License, Version 2.0.
                          embedding layers. Modified to add geospatial metadata
                          conditioning with learnable null embeddings and the
                          Geospatial Semantic Alignment projection head.
-  - models/vae_flux2.py  autoencoder. Used unmodified apart from formatting.
+  - models/vae_flux2.py  autoencoder. The network is used unmodified apart from
+                         formatting; checkpoint loading that accepts both the
+                         diffusers and the BFL key layout was added.
+
+The released GeoCore-9B weights are Apache-2.0. The DiT is trained from scratch
+on Git-10M and is not derived from any FLUX checkpoint.
 
 The following third-party assets are NOT distributed with this repository and
 remain governed by their own licenses:
 
-  - Flux.2 VAE weights (ae.safetensors)  Black Forest Labs
+  - Flux.2 VAE weights                   Black Forest Labs, Apache-2.0, taken from
+                                         black-forest-labs/FLUX.2-klein-base-4B
+                                         (vae/diffusion_pytorch_model.safetensors).
+                                         The identical weights shipped in
+                                         FLUX.2-dev as ae.safetensors are NOT used:
+                                         the FLUX Non-Commercial License v2.1
+                                         4(a)(iii) forbids all research and
+                                         development related to surveillance.
   - DINOv3-Sat teacher weights           Meta Platforms, Inc.
   - Git-10M dataset                      CC BY-NC-ND 4.0 (Liu et al., Text2Earth)
   - CLIP and T5 text encoders            OpenAI / Google, via the HuggingFace Hub

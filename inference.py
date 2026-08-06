@@ -3,7 +3,7 @@
 Example:
     python inference.py \
         --ckpt /path/to/0300000.pt \
-        --vae /path/to/ae.safetensors \
+        --vae /path/to/FLUX.2-klein-base-4B/vae/diffusion_pytorch_model.safetensors \
         --prompt "A satellite view of a highly dense urban city with towering skyscrapers" \
         --lon 126.97 --lat 37.56 --res 0.0 \
         --num-samples 4 --out samples/
@@ -20,7 +20,7 @@ from safetensors.torch import load_file
 from torchvision.utils import save_image
 
 from models.flux2 import Flux2, GeoCore4BParams, GeoCore9BParams
-from models.vae_flux2 import AutoEncoder, AutoEncoderParams
+from models.vae_flux2 import AutoEncoderParams, load_autoencoder
 from models.text_encoder import TextEncoder
 from samplers import euler_sampler_flux2
 
@@ -73,9 +73,7 @@ def load_models(args, device, weight_dtype):
 
     model.eval()
 
-    vae = AutoEncoder(AutoEncoderParams()).to(device, dtype=weight_dtype)
-    vae.load_state_dict(load_file(args.vae))
-    vae.eval()
+    vae = load_autoencoder(args.vae, device=device, dtype=weight_dtype)
 
     text_encoder = TextEncoder(device=device, dtype=weight_dtype)
     text_encoder.encoder_clip.eval()
@@ -129,7 +127,9 @@ def main():
     parser = argparse.ArgumentParser(description="GeoCore-9B text-to-image sampling")
     parser.add_argument("--ckpt", type=str, required=True,
                         help="Training .pt checkpoint, converted .safetensors file, or a sharded directory")
-    parser.add_argument("--vae", type=str, required=True, help="Path to the Flux2 VAE ae.safetensors")
+    parser.add_argument("--vae", type=str, required=True,
+                        help="Flux.2 VAE weights: vae/diffusion_pytorch_model.safetensors from "
+                             "FLUX.2-klein-base-4B (Apache-2.0). BFL-layout checkpoints also load.")
     parser.add_argument("--lora", type=str, default=None, help="Optional LoRA adapter directory to merge")
     parser.add_argument("--model-size", type=str, default="9b", choices=list(PARAMS))
 

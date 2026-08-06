@@ -31,10 +31,9 @@ from accelerate.logging import get_logger
 from accelerate.utils import ProjectConfiguration, set_seed
 
 from peft import LoraConfig, get_peft_model
-from safetensors.torch import load_file
 
 from models.flux2 import Flux2, GeoCore9BParams
-from models.vae_flux2 import AutoEncoder, AutoEncoderParams
+from models.vae_flux2 import load_autoencoder
 from models.text_encoder import TextEncoder
 from loss import SILoss_Flux2_no_repa
 from data.dataset_finetune import Git10M_T2I
@@ -187,10 +186,7 @@ def main(args):
     if accelerator.is_main_process:
         log_trainable_parameters(model)
 
-    vae = AutoEncoder(AutoEncoderParams())
-    vae.load_state_dict(load_file(args.vae_dir))
-    vae = vae.to(device, dtype=weight_dtype)
-    vae.eval()
+    vae = load_autoencoder(args.vae_dir, device=device, dtype=weight_dtype)
     requires_grad(vae, False)
 
     text_encoder = TextEncoder(device=device, dtype=weight_dtype)
@@ -349,7 +345,9 @@ def parse_args(input_args=None):
 
     parser.add_argument("--base-ckpt", type=str, required=True,
                         help="Pre-trained GeoCore-9B checkpoint (.pt); EMA weights are used when present")
-    parser.add_argument("--vae-dir", type=str, required=True, help="Path to the Flux2 VAE ae.safetensors")
+    parser.add_argument("--vae-dir", type=str, required=True,
+                        help="Flux.2 VAE weights: vae/diffusion_pytorch_model.safetensors from "
+                             "FLUX.2-klein-base-4B (Apache-2.0). BFL-layout checkpoints also load.")
     parser.add_argument("--lora-rank", type=int, default=64)
     parser.add_argument("--lora-alpha", type=int, default=128)
     parser.add_argument("--lora-dropout", type=float, default=0.0)
