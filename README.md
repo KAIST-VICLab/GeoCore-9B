@@ -402,6 +402,9 @@ The transformer and autoencoder in [`models/`](models/) are adapted from the
 teacher is [DINOv3-Sat](https://github.com/facebookresearch/dinov3). Pre-training uses the
 [Git-10M](https://huggingface.co/datasets/lcybuaa/Git-10M) dataset from Text2Earth.
 
+This work was supported in part by the National Research Foundation of Korea (NRF) grant funded by the Korean government (MSIT) under the Sejong Science Fellowship Program (RS-2026-25484549) for the project "Visualizing the Invisible Earth: A Reliability-Aware All-in-One SAR Analysis Framework with Foundation Models," and in part by the "Advanced GPU Utilization Support Program" funded by the Government of the Republic of Korea (Ministry of Science and ICT).
+
+
 This work was supported by the National Research Foundation of Korea (NRF) grant funded by the
 Korean government (MSIT) under the Sejong Science Fellowship Program (RS-2026-25484549), for
 the project “Visualizing the Invisible Earth: A Reliability-Aware All-in-One SAR Analysis Framework
