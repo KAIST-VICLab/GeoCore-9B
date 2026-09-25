@@ -31,7 +31,7 @@ components.
 
 ## 📰 News
 
-- **Sep 25, 2026:** SkateFormer accepted to NeurIPS 2026 :tada:
+- **Sep 25, 2026:** GeoCore-9B accepted to NeurIPS 2026 :tada:
 - **Aug 2026:** Paper, code, pretrained weights, and project page released. 🎉
 
 ---
