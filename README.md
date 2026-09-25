@@ -31,8 +31,8 @@ components.
 
 ## 📰 News
 
-- **Sep 25, 2026:** GeoCore-9B accepted to NeurIPS 2026 :tada:
-- **Aug 2026:** Paper, code, pretrained weights, and project page released. 🎉
+- **Sep 25, 2026:** GeoCore-9B accepted to NeurIPS 2026. :tada:
+- **Aug 2026:** Paper, code, pretrained weights, and project page released. :tada:
 
 ---
 
