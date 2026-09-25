@@ -387,11 +387,12 @@ scripts/               launch scripts and checkpoint conversion
 ## Citation
 
 ```bibtex
-@article{do2026geocore,
-  title   = {GeoCore-9B: Towards Geo-Aware Generative Foundation Models in Earth Observation},
-  author  = {Do, Jeonghyeok and Kim, Munchurl},
-  year    = {2026},
-  url     = {https://kaist-viclab.github.io/GeoCore-9B_site/}
+@inproceedings{do2026geocore,
+  title     = {GeoCore-9B: Towards Geo-Aware Generative Foundation Models in Earth Observation},
+  author    = {Do, Jeonghyeok and Kim, Munchurl},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2026},
+  url       = {https://kaist-viclab.github.io/GeoCore-9B_site/}
 }
 ```
 

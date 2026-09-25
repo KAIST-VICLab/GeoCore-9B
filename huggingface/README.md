@@ -23,6 +23,8 @@ tags:
 
 Korea Advanced Institute of Science and Technology (KAIST)
 
+**NeurIPS 2026**
+
 [![Project Page](https://img.shields.io/badge/Project%20Page-GeoCore--9B-1a6d5a?style=for-the-badge)](https://kaist-viclab.github.io/GeoCore-9B_site/)
 [![Code](https://img.shields.io/badge/GitHub-Code-181717?style=for-the-badge&logo=github)](https://github.com/KAIST-VICLab/GeoCore-9B)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge)](https://www.apache.org/licenses/LICENSE-2.0)
@@ -163,9 +165,10 @@ which restricts (re)training on that data to non-commercial use.
 ## Citation
 
 ```bibtex
-@article{do2026geocore,
-  title   = {GeoCore-9B: Towards Geo-Aware Generative Foundation Models in Earth Observation},
-  author  = {Do, Jeonghyeok and Kim, Munchurl},
-  year    = {2026}
+@inproceedings{do2026geocore,
+  title     = {GeoCore-9B: Towards Geo-Aware Generative Foundation Models in Earth Observation},
+  author    = {Do, Jeonghyeok and Kim, Munchurl},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2026}
 }
 ```
