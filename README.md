@@ -2,7 +2,7 @@
 
 <img src="https://kaist-viclab.github.io/GeoCore-9B_site/static/assets/geocore-logo-mark-trimmed.png" alt="GeoCore logo" width="112">
 
-# GeoCore-9B: Towards Geo-Aware Generative Foundation Models in Earth Observation
+# [NeurIPS 2026] GeoCore-9B: Towards Geo-Aware Generative Foundation Models in Earth Observation
 
 [Jeonghyeok Do](https://jeonghyeokdo.github.io/) &nbsp;·&nbsp;
 [Munchurl Kim](https://scholar.google.com/citations?user=bGXte_4AAAAJ&hl=en)
@@ -31,6 +31,7 @@ components.
 
 ## 📰 News
 
+- **Sep 25, 2026:** SkateFormer accepted to NeurIPS 2026 :tada:
 - **Aug 2026:** Paper, code, pretrained weights, and project page released. 🎉
 
 ---
