@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://kaist-viclab.github.io/GeoCore-9B_site/static/assets/geocore-logo-mark-trimmed.png" alt="GeoCore logo" width="112">
+<img src="https://kaist-viclab.github.io/GeoCore-9B_site/static/images/mark.png" alt="GeoCore logo" width="112">
 
 # [NeurIPS 2026] GeoCore-9B: Towards Geo-Aware Generative Foundation Models in Earth Observation
 
@@ -9,7 +9,8 @@
 
 Korea Advanced Institute of Science and Technology (KAIST)
 
-[![Paper](https://img.shields.io/badge/Paper-PDF-b5402d?style=for-the-badge)](https://kaist-viclab.github.io/GeoCore-9B_site/static/assets/GeoCore-9B-paper.pdf)
+[![arXiv](https://img.shields.io/badge/arXiv-2608.01896-b31b1b?style=for-the-badge)](https://arxiv.org/abs/2608.01896)
+[![Video](https://img.shields.io/badge/Video-YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/lS7e6Q0tbSA)
 [![Project Page](https://img.shields.io/badge/Project%20Page-GeoCore--9B-1a6d5a?style=for-the-badge)](https://kaist-viclab.github.io/GeoCore-9B_site/)
 [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Weights-GeoCore--9B-FFD21E?style=for-the-badge)](https://huggingface.co/JeonghyeokDo/GeoCore-9B)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge)](LICENSE)
@@ -153,7 +154,7 @@ All settings other than the pre-training GSA weight are held fixed.
 
 </details>
 
-See the [paper](https://kaist-viclab.github.io/GeoCore-9B_site/static/assets/GeoCore-9B-paper.pdf)
+See the [paper](https://arxiv.org/abs/2608.01896)
 and [project page](https://kaist-viclab.github.io/GeoCore-9B_site/) for full comparisons,
 qualitative results, metadata interventions, and limitations.
 
