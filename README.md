@@ -1,23 +1,36 @@
 <div align="center">
+<h2>[NeurIPS 2026] GeoCore-9B: Towards Geo-Aware Generative Foundation Models in Earth Observation</h2>
 
-<img src="https://kaist-viclab.github.io/GeoCore-9B_site/static/images/mark.png" alt="GeoCore logo" width="112">
+<div>
+    <a href='https://jeonghyeokdo.github.io/' target='_blank'>Jeonghyeok Do</a><sup>1</sup>&nbsp;&nbsp;&nbsp;&nbsp;
+    <a href='https://www.viclab.kaist.ac.kr' target='_blank'>Munchurl Kim</a><sup>1†</sup>
+</div>
+<br>
+<div>
+    <sup>†</sup>Corresponding author
+</div>
+<div>
+    <sup>1</sup>Korea Advanced Institute of Science and Technology, South Korea
+</div>
 
-# [NeurIPS 2026] GeoCore-9B: Towards Geo-Aware Generative Foundation Models in Earth Observation
-
-[Jeonghyeok Do](https://jeonghyeokdo.github.io/) &nbsp;·&nbsp;
-[Munchurl Kim](https://scholar.google.com/citations?user=bGXte_4AAAAJ&hl=en)
-
-Korea Advanced Institute of Science and Technology (KAIST)
-
-[![arXiv](https://img.shields.io/badge/arXiv-2608.01896-b31b1b?style=for-the-badge)](https://arxiv.org/abs/2608.01896)
-[![Video](https://img.shields.io/badge/Video-YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/lS7e6Q0tbSA)
-[![Project Page](https://img.shields.io/badge/Project%20Page-GeoCore--9B-1a6d5a?style=for-the-badge)](https://kaist-viclab.github.io/GeoCore-9B_site/)
-[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Weights-GeoCore--9B-FFD21E?style=for-the-badge)](https://huggingface.co/JeonghyeokDo/GeoCore-9B)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge)](LICENSE)
-
-<img src="https://img.shields.io/badge/Parameters-9.24B-555?style=flat-square" alt="9.24B parameters">
-<img src="https://img.shields.io/badge/Backbone-Flow%20Matching%20DiT-555?style=flat-square" alt="Flow Matching DiT">
-<img src="https://img.shields.io/badge/Pretraining-Git--10M-555?style=flat-square" alt="Git-10M">
+<div>
+    <h4 align="center">
+        <a href="https://kaist-viclab.github.io/GeoCore-9B_site/" target='_blank'>
+        <img src="https://img.shields.io/badge/🏠-Project%20Page-blue">
+        </a>
+        <img src="https://img.shields.io/badge/2026-NeurIPS-brightgreen">
+        <a href="https://arxiv.org/abs/2608.01896" target='_blank'>
+        <img src="https://img.shields.io/badge/arXiv-2608.01896-b31b1b.svg">
+        </a>
+        <a href="https://youtu.be/lS7e6Q0tbSA" target='_blank'>
+        <img src="https://img.shields.io/badge/Presentation-%23FF0000.svg?logo=YouTube&logoColor=white">
+        </a>
+        <a href="https://huggingface.co/JeonghyeokDo/GeoCore-9B" target='_blank'>
+        <img src="https://img.shields.io/badge/🤗-Weights-yellow">
+        </a>
+        <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/KAIST-VICLab/GeoCore-9B">
+    </h4>
+</div>
 
 <img src="assets/teaser.jpg" alt="Text-conditioned generation compared with prior methods" width="100%">
 
